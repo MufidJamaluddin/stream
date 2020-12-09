@@ -1,5 +1,7 @@
 # Stream
 
+![GitHub CI](https://github.com/MufidJamaluddin/stream/workflows/Go/badge.svg)
+
 Do you want to fetch data, process it, and send it or collect it later without store all initial data in memory? Stream is the best choice for you!
  
 ## Instalation
@@ -22,19 +24,20 @@ You can collect result to multiple destination which implemented ICollector inte
 ```
 	inStream := &Stream{
 		enter: func(feedFunc func(interface{})) error {
-            rows, err := db.Query(`SELECT u.id, u.price FROM products u WHERE YEAR(created_at) = 2020 AND type IN ('laptop', 'pc');`)
-            if err != nil { 
-                log.Fatal(err) 
-            }
-            defer rows.Close()
-        
-            for i := 0; rows.Next(); i++ {
-                if err = rows.Scan(&product.Id, &product.Price); err != nil {
-                    feedFunc(product)
-                }
-            }
+		  
+			rows, err := db.Query(`SELECT u.id, u.price FROM products u WHERE YEAR(created_at) = 2020 AND type IN ('laptop', 'pc');`)
+			if err != nil { 
+			     log.Fatal(err) 
+			}
+			defer rows.Close()
 
-			return nil
+			for i := 0; rows.Next(); i++ {
+			     if err = rows.Scan(&product.Id, &product.Price); err != nil {
+				feedFunc(product)
+			     }
+			}
+
+			return err
 		},
 	}
 
@@ -51,7 +54,7 @@ You can collect result to multiple destination which implemented ICollector inte
 		Map(func(item interface{}) interface{} {
 			return MapToComputerScamModel(item)
 		}).
-        Collect(ScamCollector, ScamChannel, ScamDBUpdate).
+        	Collect(ScamCollector, ScamChannel, ProductDBUpdate).
 		Run()
 ```
 
