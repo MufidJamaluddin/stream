@@ -22,40 +22,40 @@ You can collect result to multiple destination which implemented ICollector inte
 ## Usage
 
 ```
-	inStream := &Stream{
-		enter: func(feedFunc func(interface{})) error {
-		  
-			rows, err := db.Query(`SELECT u.id, u.price FROM products u WHERE YEAR(created_at) = 2020 AND type IN ('laptop', 'pc');`)
-			if err != nil { 
-			     log.Fatal(err) 
-			}
-			defer rows.Close()
+inStream := &Stream{
+	source: func(feedFunc func(interface{})) error {
 
-			for i := 0; rows.Next(); i++ {
-			     if err = rows.Scan(&product.Id, &product.Price); err != nil {
-				feedFunc(product)
-			     }
-			}
+		rows, err := db.Query(`SELECT u.id, u.price FROM products u WHERE YEAR(created_at) = 2020 AND type IN ('laptop', 'pc');`)
+		if err != nil { 
+		     log.Fatal(err) 
+		}
+		defer rows.Close()
 
-			return err
-		},
-	}
+		for i := 0; rows.Next(); i++ {
+		     if err = rows.Scan(&product.Id, &product.Price); err != nil {
+			feedFunc(product)
+		     }
+		}
 
-	err := inStream.
-		Filter(func(item interface{}) interface{} {
-			return item.(product).Price > 1000 && item.(product).Price < 10000
-		}).
-		Map(func(item interface{}) interface{} {
-			return MapToComputerModel(item)
-		}).
-		Filter(func(item interface{}) interface{} {
-			return IsComputerPriceUnnatural(item.(computer))
-		}).
-		Map(func(item interface{}) interface{} {
-			return MapToComputerScamModel(item)
-		}).
-        	Collect(ScamCollector, ScamChannel, ProductDBUpdate).
-		Run()
+		return err
+	},
+}
+
+err := inStream.
+	Filter(func(item interface{}) interface{} {
+		return item.(product).Price > 1000 && item.(product).Price < 10000
+	}).
+	Map(func(item interface{}) interface{} {
+		return MapToComputerModel(item)
+	}).
+	Filter(func(item interface{}) interface{} {
+		return IsComputerPriceUnnatural(item.(computer))
+	}).
+	Map(func(item interface{}) interface{} {
+		return MapToComputerScamModel(item)
+	}).
+	Collect(ScamCollector, ScamChannel, ProductDBUpdate).
+	Run()
 ```
 
 ## Notes
